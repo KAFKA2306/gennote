@@ -2,3 +2,4 @@
 test/output/
 *.pyc
 __pycache__/
+test/*.md
