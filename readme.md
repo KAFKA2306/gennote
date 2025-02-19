@@ -23,3 +23,5 @@ This project is a simple tool that searches for the latest financial data, forma
 - `search_latest.py`: Searches for the latest financial data.
 - `post.py`: Posts the financial data to a blog.
 - `post_test.py`: Tests the posting functionality.
+
+---
