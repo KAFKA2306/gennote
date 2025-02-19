@@ -25,3 +25,7 @@ This project is a simple tool that searches for the latest financial data, forma
 - `post_test.py`: Tests the posting functionality.
 
 ---
+
+see https://kafkafinancialgroup.hatenablog.com/
+
+---
