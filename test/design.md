@@ -10,6 +10,3 @@ AtomPubを利用すると、各種のブログ編集ソフトから記事の投�
 
 ルートエンドポイント
 https://blog.hatena.ne.jp/kafkafinancialgroup/kafkafinancialgroup.hatenablog.com/atom
-
-APIキー
-q8zoa5q2q4
