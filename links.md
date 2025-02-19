@@ -1,0 +1,1 @@
+https://kafkafinancialgroup.hatenablog.com/
