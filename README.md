@@ -1,6 +1,6 @@
 # Project Description
 
-This searches for the latest financial data, formats it, and posts it to a blog.
+It searches for the latest financial data, formats it, and posts it to a blog.
 Result : https://kafkafinancialgroup.hatenablog.com/
 
 ## Directory Structure
