@@ -17,4 +17,4 @@ Result : https://kafkafinancialgroup.hatenablog.com/
 - `search_latest.py`: Searches for the latest financial data.
 - `search_china.py`: Searches for the lastest china financial data.
 - `search_globalmacro.py`: Searches for the lastest globalmacro financial data.
-- `post.py`: Posts markdown to a blog.
+- `post.py`: Posts to a blog.
