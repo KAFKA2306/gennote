@@ -1,36 +1,54 @@
-# Project Description
+# 金融データ自動収集・ブログ投稿システム
 
-It searches for the latest financial data, formats it, and posts it to a blog.
-Result : https://kafkafinancialgroup.hatenablog.com/
+## 概要
 
-## Directory Structure
+最新の金融データを自動的に検索・整形し、はてなブログに投稿するシステムです。
+https://kafkafinancialgroup.hatenablog.com/
+
+## システム構成
 
 ```
 .
 └── test/
     ├── src/
-    │   ├── post.py
-    │   └── search.py
+    │   ├── search_latest.py    # 最新金融データ検索
+    │   ├── search_china.py     # 中国金融データ検索
+    │   ├── search_globalmacro.py # グローバルマクロ分析
+    │   └── post.py             # ブログ投稿処理
 ```
 
-## src/* Explanation
-- `search_latest.py`: Searches for the latest financial data.
-- `search_china.py`: Searches for the lastest china financial data.
-- `search_globalmacro.py`: Searches for the lastest globalmacro financial data.
-- `post.py`: Posts to a blog.
+## 主要機能
 
----
+**検索モジュール**
+- 多言語ドメインからの情報収集（中国語サイト対応）
+- LLMによる情報の整理・分析
+- 複数の金融分野をカバー（株式、マクロ経済、中国市場）
 
-検索機能付きLLMとブログを組み合わせて最新情報を取得して整理する
+**投稿モジュール**
+- はてなブログAPIを使用した自動投稿
+- マークダウン形式での整形出力
+- 定期的な情報更新
 
-基本コンセプト検証OK
+## 特長
 
-強いところ：中国語ドメインなどからも簡単に情報収集できる
+**強み**
+- 中国語ドメインを含む多言語ソースからの情報収集
+- LLMによる自動的な情報整理
+- 定期的な更新による最新情報の提供
 
-https://kafkafinancialgroup.hatenablog.com/entry/2025/02/21/011723
+**課題**
+- 情報の精度と信頼性の向上が必要
+- LLMモデル（sonar-reasoning-pro）の制御精度
 
-弱いところ：情報の精査が不足している
+## 将来性
 
-将来性：model,prompt,domainのアップデートで価値が出るターゲット設定ができる
+- モデルの改善による精度向上
+- プロンプトエンジニアリングの最適化
+- ドメイン特化型の情報収集強化
 
-"model": "sonar-reasoning-pro"の制御が難しい
+## 技術スタック
+
+- Python
+- はてなブログAPI
+- LLMモデル（sonar-reasoning-pro）
+- マークダウン処理
