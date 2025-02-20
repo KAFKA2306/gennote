@@ -2,12 +2,21 @@ from datetime import datetime
 import os
 import requests
 from dotenv import load_dotenv
+import post
+
+from config import BASE_CONFIG, get_file_paths
+from utils import setup_logging, format_blog_content, remove_think_sections, convert_to_html
+from rate_limiter import RateLimiter
+from cache import ResponseCache
 
 class FinancialDataProcessor:
     def __init__(self):
         load_dotenv('M:/ML/ChatGPT/gennote/.env')
-        self.api_key = os.getenv('PerplexityAPI_KEY')
-        self.api_url = "https://api.perplexity.ai/chat/completions"
+        setup_logging()
+        self.api_key = BASE_CONFIG['api_key']
+        self.api_url = BASE_CONFIG['api_url']
+        self.rate_limiter = RateLimiter()
+        self.cache = ResponseCache()
 
     def get_file_paths(self):
         today_date = datetime.now().strftime('%Y-%m-%d')
@@ -23,30 +32,66 @@ class FinancialDataProcessor:
         }
         
         prompt = f"""
-本日{today_date}の市場データに基づき、以下のフォーマットで回答してください：
+本日{today_date}の市場データに基づき、$BABAの詳細な分析レポートを作成してください。
 
 # 金融AIレポート {today_date}
 
-## 好決算銘柄
-[好決算銘柄の詳細をリストアップ]
-- 銘柄コード(https://kabutan.jp/stock/finance?code=tickerのリンク埋め込み)：
-- 銘柄名：
-- 会社紹介：
-- 決算まとめ：
-- 売上高：
-- 営業利益：
-- 株価変動率：
+## [基本情報](pplx://action/followup)
+- ティッカーシンボル: BABA (NYSE)(https://finance.yahoo.com/quote/ticker/のリンク埋め込み)
+- 企業名: アリババ・グループ・ホールディング
+- 時価総額: 
+- 株価: 
 
+## [事業概要](pplx://action/followup)
+- 主要事業セグメント
+- 収益構造
+- 最新の事業展開
+- 注目のイニシアチブ
 
-## 値上がり率上位銘柄
-[値上がり率上位3銘柄をリストアップ]
-- 銘柄コード(https://kabutan.jp/stock/finance?code=tickerのリンク埋め込み)：
-- 銘柄名：
-- 会社紹介：
-- 上昇率：
-- 理由：
+## [財務分析](pplx://action/followup)
+- 直近四半期業績
+  - 売上高と前年同期比
+  - 営業利益と前年同期比
+  - 純利益と前年同期比
+  - フリーキャッシュフロー
+- 主要財務指標
+  - PER/PBR/PSR
+  - 営業利益率
+  - ROE/ROA
 
+## [成長性分析](pplx://action/followup)
+- 今後の成長戦略
+- 市場予測
+- リスク要因
+- 投資機会
+
+## [マクロ環境](pplx://action/followup)
+- 中国経済動向
+- 規制環境
+- 業界動向
+- 競合状況
+
+## [テクニカル分析](pplx://action/followup)
+- トレンド分析
+  - 移動平均線（SMA50/200）
+  - RSI（14日）
+  - MACD
+- ボラティリティ分析
+  - ヒストリカルボラティリティ
+  - ボリンジャーバンド
+- サポート/レジスタンスレベル
+
+## [比較分析](pplx://action/followup)
+- 競合他社比較
+  - Amazon (AMZN)
+  - JD.com (JD)
+  - PDD Holdings (PDD)
+- 業界平均との比較
+  - バリュエーション
+  - 収益性
+  - 成長性
 """
+
 
         payload = {
             "model": "sonar-reasoning-pro",
@@ -59,10 +104,7 @@ class FinancialDataProcessor:
         return headers, payload
 
     def format_blog_content(self, content):
-        # Markdownをはてな記法に変換
-        formatted = content.replace('# ', '*').replace('## ', '**')
-        formatted = formatted.replace('- ', ':').replace('：', ':')
-        return formatted
+        return format_blog_content(content)
 
     def write_output_file(self, file_path, content):
         formatted_content = self.format_blog_content(content)
@@ -92,6 +134,7 @@ class FinancialDataProcessor:
 def main():
     processor = FinancialDataProcessor()
     processor.process_data()
+    post.main()
 
 if __name__ == "__main__":
     main()

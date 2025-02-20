@@ -3,11 +3,19 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from config import BASE_CONFIG, get_file_paths
+from utils import setup_logging, format_blog_content, remove_think_sections, convert_to_html
+from rate_limiter import RateLimiter
+from cache import ResponseCache
+
 class FinancialDataProcessor:
     def __init__(self):
         load_dotenv('M:/ML/ChatGPT/gennote/.env')
-        self.api_key = os.getenv('PerplexityAPI_KEY')
-        self.api_url = "https://api.perplexity.ai/chat/completions"
+        setup_logging()
+        self.api_key = BASE_CONFIG['api_key']
+        self.api_url = BASE_CONFIG['api_url']
+        self.rate_limiter = RateLimiter()
+        self.cache = ResponseCache()
 
     def get_file_paths(self):
         today_date = datetime.now().strftime('%Y-%m-%d')
@@ -23,46 +31,50 @@ class FinancialDataProcessor:
         }
         
         prompt = f"""
-本日{today_date}の市場データに基づき、以下のフォーマットで回答してください：
+    BOOTHの新着3D衣装を以下の手順で検索・紹介してください：
 
-# 金融AIレポート {today_date}
+    検索条件：
+    - サイト: BOOTH
+    - カテゴリ: 3D衣装
+    
 
-## 好決算銘柄
-[好決算銘柄の詳細をリストアップ]
-- 銘柄コード(https://kabutan.jp/stock/finance?code=tickerのリンク埋め込み)：
-- 銘柄名：
-- 会社紹介：
-- 決算まとめ：
-- 売上高：
-- 営業利益：
-- 株価変動率：
+    出力形式：
+    各商品は以下の形式で記載してください：
 
+    ## 商品名
+    - 🔗 商品ページ: https://booth.pm/ja/items/【商品ID】
+    - 💰 価格: 【価格】円
+    - 🎨 クリエイター: 【ショップ名】
+    - ✨ 商品の特徴:
+    【商品の魅力を3行程度で説明】
 
-## 値上がり率上位銘柄
-[値上がり率上位3銘柄をリストアップ]
-- 銘柄コード(https://kabutan.jp/stock/finance?code=tickerのリンク埋め込み)：
-- 銘柄名：
-- 会社紹介：
-- 上昇率：
-- 理由：
+    必須要件：
+    1. 新着5商品を厳選
+    2. 各商品に対応したIDを必ず数字で記載
+    3. VRChat向けの衣装のみ選定
 
-"""
+    禁止事項：
+    - 商品IDの省略
+    - 商品IDと商品タイトルの中身の不一致
+
+    """
 
         payload = {
             "model": "sonar-reasoning-pro",
             "messages": [{
                 "role": "user",
                 "content": prompt
-            }]
+            }],
+            "search_domain_filter": ["booth.pm"],
+            "return_citations": True  ,
+            "search_recency_filter": "week",
         }
         
         return headers, payload
 
+
     def format_blog_content(self, content):
-        # Markdownをはてな記法に変換
-        formatted = content.replace('# ', '*').replace('## ', '**')
-        formatted = formatted.replace('- ', ':').replace('：', ':')
-        return formatted
+        return format_blog_content(content)
 
     def write_output_file(self, file_path, content):
         formatted_content = self.format_blog_content(content)
@@ -95,3 +107,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+import post_booth
+# post_booth()
