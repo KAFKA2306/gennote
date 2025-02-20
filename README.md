@@ -26,8 +26,11 @@ Result : https://kafkafinancialgroup.hatenablog.com/
 基本コンセプト検証OK
 
 強いところ：中国語ドメインなどからも簡単に情報収集できる
+
 https://kafkafinancialgroup.hatenablog.com/entry/2025/02/21/011723
+
 弱いところ：情報の精査が不足している
+
 将来性：model,prompt,domainのアップデートで価値が出るターゲット設定ができる
 
 "model": "sonar-reasoning-pro"の制御が難しい
