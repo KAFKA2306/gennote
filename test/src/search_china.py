@@ -8,6 +8,7 @@ from utils import setup_logging, format_blog_content, remove_think_sections, con
 from rate_limiter import RateLimiter
 from cache import ResponseCache
 
+
 class FinancialDataProcessor:
     def __init__(self):
         load_dotenv('M:/ML/ChatGPT/gennote/.env')
@@ -16,7 +17,7 @@ class FinancialDataProcessor:
         self.api_url = BASE_CONFIG['api_url']
         self.rate_limiter = RateLimiter()
         self.cache = ResponseCache()
-        self.search_domains = SEARCH_DOMAINS['china_market']
+        self.search_domains =  ['stats.gov.cn', 'pbc.gov.cn', 'mofcom.gov.cn', 'aastocks.com', 'etnet.com.hk', 'sse.com.cn']
 
     def get_file_paths(self):
         today_date = datetime.now().strftime('%Y-%m-%d')
@@ -32,41 +33,36 @@ class FinancialDataProcessor:
         }
         
         prompt = f"""
-    # 香港金融市場AIレポート {today_date}
+    # 香港中国金融市場AI/LLMレポート {today_date}
 
-    以下の内容について、etnet 經濟通および関連金融サイトの最新情報に基づいて詳細に分析してください。
+    以下の内容について、經濟通および関連金融サイトの中国語、広東語の最新情報に基づいて明瞭かつ具体的に引用してください。
 
-    ## 1. 中国AI関連の主要ニュース
-    - 本日の重要なAI関連ニュース（具体的な事例と影響を含む）
+    ## 1. 中国AI/LLM関連企業の主要ニュース
+    - 本日の重要なAI/LLM関連ニュース3選（具体的な事例と影響を含む）
     - 関連する上場企業の動き
     - 各企業のティッカーシンボルは https://finance.yahoo.com/quote/[TICKER] の形式でリンク化
 
-    ## 2. 注目の好決算企業分析
-    各企業について以下の項目を詳細に記載：
+    ## 2. 最近のAI/LLM関係の中国企業、香港企業の決算概要
+    各企業について以下の項目を明瞭かつ具体的に紹介：
     - 企業コード・名称（Yahoo Financeリンク付き）
     - 事業概要（主力製品・サービス）
+    - 決算発表日
     - 決算ハイライト
     * 売上高（前年同期比）
     * 営業利益（前年同期比）
     * 純利益（前年同期比）
-    * 特筆すべき事業進捗
-    - 株価パフォーマンス
     * 決算発表後の株価変動
     * 年初来パフォーマンス
 
     ## 3. 市場動向への影響
-    - 上記のニュースや決算が香港/中国市場に与える影響
-    - 関連セクターへの波及効果
     - 投資家の反応や市場センチメント
-
+    - 今後の見通し
+    
     注意事項：
     - 数値は具体的に記載
     - 企業名は正式名称を使用
-    - 重要な指標は前年同期比を含める
-    - 各セクションは明確に区分け
     - すべての情報は日本語で出力
-
-    最後に、投資判断に重要と思われる追加情報があれば補足してください。
+    - 平文で出力
     """
 
         payload = {
@@ -126,3 +122,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
