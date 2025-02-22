@@ -43,7 +43,7 @@ class JPSearcher(SearchBase):
 
     ]
 
-        self.recency_days = 1
+        self.recency_days = 7
 
     def create_jp_prompt(self):
         base_prompt = self.create_base_prompt()
