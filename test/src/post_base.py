@@ -1,67 +1,140 @@
-from config import POST_CONFIG, BASE_CONFIG
-from utils import convert_to_html, remove_think_sections
-import base64
+# post_base.py
+import os
 import requests
+import base64
+import markdown
+import re
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import logging
 from datetime import datetime
+from xml.sax.saxutils import escape
 
 class PostBase:
     def __init__(self):
-        self.hatena_config = POST_CONFIG['hatena']
-        self.base_config = BASE_CONFIG
+        load_dotenv('M:/ML/ChatGPT/gennote/.env')
+        self.hatena_id = os.getenv('HATENA_ID')
+        self.hatena_api_key = os.getenv('HATENA_API_KEY')
+        self.blog_domain = 'kafkafinancialgroup.hatenablog.com'
+        self._setup_logging()
+
+    def _setup_logging(self):
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
+        self.logger = logging.getLogger(__name__)
+
+    def clean_content(self, content):
+        """下位互換性のために残す"""
+        return self.clean_html_content(content)
+
+    def clean_html(self, content):
+        """下位互換性のために残す"""
+        return self.clean_html_content(content)
+
+    def clean_html_content(self, content):
+        """HTMLコンテンツのクリーニング処理"""
+        # Thinkセクションの削除
+        #content = re.sub(r'## Think\n.*?(?=\n##|$)', '', content, flags=re.DOTALL)
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        # 引用番号の削除
+        content = re.sub(r'\[\d+\]', '', content)
+   
+        # Markdownの前処理
+        content = self._clean_markdown_symbols(content)
         
-    def create_auth_header(self, hatena_id, api_key):
-        auth_string = base64.b64encode(f"{hatena_id}:{api_key}".encode()).decode()
-        return {
-            'Content-Type': self.hatena_config['content_type'],
-            'Authorization': f'Basic {auth_string}'
-        }
+        # Markdown変換
+        md = markdown.Markdown(extensions=['extra', 'nl2br', 'tables', 'fenced_code'])
+        html_content = md.convert(content)
+        
+        # BeautifulSoupでHTML解析
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # 許可するHTMLタグ
+        allowed_tags = [
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'p', 'br', 'hr',
+            'ul', 'ol', 'li',
+            'strong', 'em', 'blockquote', 'pre', 'code',
+            'table', 'thead', 'tbody', 'tr', 'th', 'td',
+            'a', 'img', 'div', 'span'
+        ]
 
-    def prepare_content(self, content):
-        content = remove_think_sections(content)
-        return convert_to_html(content)
+        # 不要な属性削除
+        for tag in soup.find_all(True):
+            if tag.name not in allowed_tags:
+                tag.unwrap()
+            else:
+                attrs = list(tag.attrs.keys())
+                for attr in attrs:
+                    if attr not in ['href', 'src', 'alt']:
+                        del tag[attr]
 
-class HatenaPost(PostBase):
-    def post(self, content, hatena_id, api_key, blog_domain):
-        try:
-            endpoint = self.hatena_config['endpoint_template'].format(
-                hatena_id, blog_domain
-            )
-            headers = self.create_auth_header(hatena_id, api_key)
-            content_html = self.prepare_content(content)
-            
-            entry_xml = self.hatena_config['entry_template'].format(
-                datetime.now().strftime("%Y-%m-%d"),
-                hatena_id,
-                content_html,
-                datetime.now().isoformat()
-            )
-            current_date = datetime.now().strftime("%Y-%m-%d")
-            
-            entry_xml = f'''<?xml version="1.0" encoding="utf-8"?>
+        return str(soup)
+
+    def _clean_markdown_symbols(self, content):
+        """Markdownシンボルの整理"""
+        content = re.sub(r'^###\s', '#### ', content, flags=re.MULTILINE)
+        content = re.sub(r'^##\s', '### ', content, flags=re.MULTILINE)
+        content = re.sub(r'^#\s', '## ', content, flags=re.MULTILINE)
+        content = re.sub(r'^\*\s', '- ', content, flags=re.MULTILINE)
+        content = re.sub(r'^\+\s', '- ', content, flags=re.MULTILINE)
+        return content
+
+    def create_entry_xml(self, title, content, tags=None, categories=None):
+        # HTMLクリーニング
+        cleaned_html = self.clean_html_content(content)
+        
+        # タグとカテゴリの処理
+        category_xml = ""
+        if tags:
+            category_xml += "\n".join([f"<category term='{escape(tag)}' />" for tag in tags])
+        if categories:
+            category_xml += "\n".join([
+                f"<category term='{escape(category)}' scheme='http://www.hatena.ne.jp/info/xmlns#category' />"
+                for category in categories
+            ])
+
+        entry_xml = f'''<?xml version="1.0" encoding="utf-8"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
        xmlns:app="http://www.w3.org/2007/app">
-    <title>金融AIレポート {current_date}</title>
-    <author>
-        <name>{hatena_id}</name>
-    </author>
-    <content type="text/html"><![CDATA[
-        {content_html}
-    ]]></content>
-    <updated>{datetime.now().isoformat()}</updated>
-    <app:control>
-        <app:draft>no</app:draft>
-    </app:control>
+  <title>{escape(title)}</title>
+  <author><name>{self.hatena_id}</name></author>
+  {category_xml}
+  <content type="text/html">
+    {escape(cleaned_html)}
+  </content>
+  <updated>{datetime.now().isoformat()}</updated>
+  <app:control>
+    <app:draft>no</app:draft>
+  </app:control>
 </entry>'''
 
+        return entry_xml
+
+    def post_to_hatena(self, entry_xml):
+        endpoint = f'https://blog.hatena.ne.jp/{self.hatena_id}/{self.blog_domain}/atom/entry'
+        auth = base64.b64encode(f"{self.hatena_id}:{self.hatena_api_key}".encode()).decode()
+
+        try:
             response = requests.post(
                 endpoint,
-                headers=headers,
+                headers={
+                    'Content-Type': 'application/xml; charset=utf-8',
+                    'Authorization': f'Basic {auth}'
+                },
                 data=entry_xml.encode('utf-8')
             )
-
+            
             if response.status_code == 201:
-                return True, response.headers.get('Location', 'URL not found')
-            return False, f"APIエラー: {response.status_code}"
+                self.logger.info(f'投稿成功: {response.headers.get("Location")}')
+                return True, response.headers.get('Location')
+            else:
+                self.logger.error(f"APIエラー: ステータスコード {response.status_code}")
+                self.logger.error(f"エラー詳細: {response.text}")
+                return False, None
 
         except Exception as e:
-            return False, str(e)
+            self.logger.error(f"Post Error: {str(e)}")
+            return False, None
