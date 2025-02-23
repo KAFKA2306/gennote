@@ -6,46 +6,80 @@ from post_crypto import CryptoPostProcessor
 class CryptoSearcher(SearchBase):
     def __init__(self):
         super().__init__()
-        self.domain_filter = ["coindesk.com", "cointelegraph.com", "cryptowatch.jp","finance.yahoo.com","kitco.com","binance.com","cryptobriefing.com"]
+        self.domain_filter = [
+            # グローバルトップサイト
+            "cointelegraph.com",         # 月間1280万訪問者（1位）
+            "utoday.com",                # 月間880万訪問者（2位）
+            "coindesk.com",              # 月間500万訪問者（3位）
+            "coincodex.com",             # 月間450万訪問者（4位）
+            "coingape.com",              # 月間450万訪問者（5位）
+            "ambcrypto.com",             # 月間430万訪問者（6位）
+            "crypto.news",               # 月間410万訪問者（7位）
+            "bitcoinist.com",            # 月間370万訪問者（8位）
+            "dailyhodl.com",             # 月間350万訪問者（9位）
+            "beincrypto.com",            # 月間330万訪問者（10位）
+            
+            # 地域特化型
+            "bitcoin.com",               # アジア市場に強み
+            "news.bitcoin.com",         # Bitcoin関連ニュース専門
+            "decrypt.co",                # Web3/NFT分野に特化
+            
+            # 機関投資家向け
+            "blockworks.co",             # 機関投資家向け分析
+            "theblock.co",               # 深い市場分析
+            
+            # 日本関連
+            "coinpost.jp",               # 日本語主要サイト
+            "cryptowatch.jp",           # 日本語市場分析
+            
+            # 公式情報源
+            "sec.gov",                   # 米国証券取引委員会
+            "finra.org",                 # 金融業規制当局
+            "bis.org",                   # 国際決済銀行
+        ]
+
         self.recency_days = 7
 
     def create_crypto_prompt(self):
         base_prompt = self.create_base_prompt()
         crypto_prompt = f"""
         {base_prompt}
-        ## 仮想通貨/暗号資産マーケットレポート
+        ## 仮想通貨/暗号資産 投資家向けアナリストレポート
+
+        市場の変化、法律や思惑の変化から、今後の投機的機会を考察する根拠の情報をお届けします。
+        主要暗号資産や、暗号資産関連株の急騰や急落の背景にある要因を分析し、今後の価格変動についての示唆を提供します。
 
         【検索条件】
-        - 重要度: 市場への影響度が高い順
-        - 対象通貨: BTC/ETH/主要アルトコイン
-        - 指標: 価格変動/取引量/時価総額/出来高
+        - 重要度: 市場構造・規制・機関投資家動向（定量的に）
+        - 対象通貨: BTC,ETH,SOL
+        - 対象BTC関連株: MSTR, MARA,SML, COIN, Metaplanet, SBI VC trade, Remixpoint, gumi
+        - 投機的な動き
 
         【出力形式】
-        # 本日のハイライト
-        - 最重要ニュース3点を箇条書きで簡潔に
+        ## マクロ環境の変化
+        - 金融政策（FRB/日銀）の影響
+        - 機関投資家の資金フロー動向
 
-        ## 主要通貨の動向
-        ### ビットコイン（BTC）
-        - 💰 現在価格: $xx,xxx (前日比 xx%)
-        - 💫 主な材料: [重要イベント/ニュース]
+        ## 重要イベント・ニュース
+        4. [重要ニュース]
+        - 価格への影響分析
+        - 投資機会への示唆
+        3. [重要イベントスケジュール]
+        - 投資機会への示唆
 
-        ## 注目ニュース
-        1. [最重要ニュース]
-        - 影響度: 高/中/低
-        - 市場への影響を3行で解説
-        
-        2. [重要ニュース]
-        - 影響度: 高/中/低
-        - 市場への影響を3行で解説
+        ## ETF市場の動向 
+        - 投資機会への示唆
 
-        ## 市場分析
-        - 機関投資家の動向
-        - 規制関連の動き
-
-        ## 今後の注目ポイント
-        - 重要イベントスケジュール
+        ## BTC関連株の分析
+        - 機関投資家の保有動向
+        - 事業戦略の変化
+        - 財務状況の変化
+        - MSTR,NAV
+        - Metaplanet, SBIbitbank, Remixpoint, gumi
+        - 投資機会への示唆
         """
         return crypto_prompt
+
 
 
     def execute_search(self):
