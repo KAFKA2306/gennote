@@ -1,0 +1,5 @@
+2025-02-20 20:55:10,989 - ERROR - 世界銀行データエラー: 'unit'
+2025-02-20 20:55:11,455 - ERROR - IMFデータ取得エラー: 'Data'
+2025-02-20 20:55:11,525 - ERROR - 商品価格取得エラー CL=F: Expecting value: line 1 column 1 (char 0)
+2025-02-20 20:55:11,579 - ERROR - 商品価格取得エラー GC=F: Expecting value: line 1 column 1 (char 0)
+2025-02-20 20:55:11,633 - ERROR - 商品価格取得エラー HG=F: Expecting value: line 1 column 1 (char 0)

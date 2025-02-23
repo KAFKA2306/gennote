@@ -1,0 +1,5 @@
+2025-02-22 11:15:05,614 - ERROR - Request failed: 400 Client Error: Bad Request for url: https://api.perplexity.ai/chat/completions
+2025-02-22 11:15:05,614 - ERROR - コンテンツ取得失敗
+2025-02-22 11:16:18,548 - INFO - ファイル保存成功: M:/ML/ChatGPT/gennote/test/output/2025-02-22.md
+2025-02-22 11:16:19,367 - INFO - 投稿成功: https://blog.hatena.ne.jp/kafkafinancialgroup/kafkafinancialgroup.hatenablog.com/atom/entry/6802418398330871849
+2025-02-22 11:16:19,370 - INFO - 完全正常終了
