@@ -10,5 +10,5 @@ M:\ML\ChatGPT\gennote\batch\scripts
 M:\ML\ChatGPT\gennote\batch\batch_logs
 "batch/batch_logs/" 
 "batch/scripts/" 
-
+*.log
 

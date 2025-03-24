@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 
 from config import BASE_CONFIG, get_file_paths, SEARCH_DOMAINS
 from utils import setup_logging, format_blog_content, remove_think_sections, convert_to_html
-from rate_limiter import RateLimiter
-from cache import ResponseCache
 
 class GlobalMacroAnalyzer:
     def __init__(self):
@@ -14,8 +12,6 @@ class GlobalMacroAnalyzer:
         setup_logging()
         self.api_key = BASE_CONFIG['api_key']
         self.api_url = BASE_CONFIG['api_url']
-        self.rate_limiter = RateLimiter()
-        self.cache = ResponseCache()
         self.search_domains = [
             # グローバル金融機関
             "worldbank.org",
@@ -134,19 +130,6 @@ class GlobalMacroAnalyzer:
             paths = get_file_paths()
             today_date = datetime.now().strftime('%Y-%m-%d')
             
-            # キャッシュチェック
-            cache_key = f"macro_analysis_{today_date}"
-            cached_result = self.cache.get(cache_key)
-            if cached_result:
-                print("キャッシュされたデータを使用します")
-                self.write_output_file(paths['output'], cached_result)
-                return
-
-            # レート制限チェック
-            if not self.rate_limiter.can_process():
-                print("API制限に達しました。しばらく待ってから再試行してください")
-                return
-
             headers, payload = self.create_api_request(today_date)
             response = requests.post(self.api_url, headers=headers, json=payload)
             response.raise_for_status()
@@ -157,10 +140,7 @@ class GlobalMacroAnalyzer:
             
             formatted_content = self.format_macro_content(output_text, citations)
             self.write_output_file(paths['output'], formatted_content)
-            
-            # キャッシュに保存
-            self.cache.set(cache_key, formatted_content)
-            
+                      
             print(f'マクロ経済分析レポートが生成されました: {paths["output"]}')
             
         except requests.exceptions.RequestException as e:

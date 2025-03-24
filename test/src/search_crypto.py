@@ -38,7 +38,7 @@ class CryptoSearcher(SearchBase):
             "bis.org",                   # 国際決済銀行
         ]
 
-        self.recency_days = 7
+        self.recency_days = 1
 
     def create_crypto_prompt(self):
         base_prompt = self.create_base_prompt()

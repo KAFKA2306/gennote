@@ -16,6 +16,7 @@ class JPPostProcessor(PostBase):
         self.categories = [
             "投資",
             "株式",
+            
             "マーケット分析"
         ]
 

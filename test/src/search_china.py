@@ -14,7 +14,7 @@ class ChinaSearcher(SearchBase):
             'etnet.com.hk', 
             'sse.com.cn'
         ]
-        self.recency_days = 7
+        self.recency_days = 2
 
     def create_china_prompt(self):
         base_prompt = self.create_base_prompt()
