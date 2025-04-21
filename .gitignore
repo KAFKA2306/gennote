@@ -1,5 +1,5 @@
 .env
-test/output/*
+test/output/*md
 test/input
 test/input/
 test/input/*

@@ -73,8 +73,13 @@ class RealEstatePostProcessor(PostBase):
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
-                # 株価を取得（実際のHTMLに合わせて調整が必要）
-                price_element = soup.select_one('._3rXWJKZF')
+                # 検索結果に基づいて修正したセレクター
+                price_element = soup.select_one(f'[data-symbol="{stock_code}"][data-field="regularMarketPrice"]')
+                if price_element:
+                    return price_element.text.strip()
+                    
+                # 別の方法も試す
+                price_element = soup.select_one('//*[@class="D(ib) Mend(20px)"]/span')
                 if price_element:
                     return price_element.text.strip()
             
