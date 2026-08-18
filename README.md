@@ -1,54 +1,37 @@
-# 金融データ自動収集・ブログ投稿システム AIFinReporter
+# gennote
 
-## 概要
+金融情報を検索・整形し、はてなブログ AtomPub へ送信する Python プロトタイプです。
 
-最新の金融データを自動的に検索・整形し、はてなブログに投稿するシステムです。
-https://kafkafinancialgroup.hatenablog.com/
+公開先としてコード中に設定されているブログ: https://kafkafinancialgroup.hatenablog.com/
 
-## システム構成
+## 現在の実装
 
-```
-.
-└── test/
-    ├── src/
-    │   ├── search_latest.py    # 最新金融データ検索
-    │   ├── search_china.py     # 中国金融データ検索
-    │   ├── search_globalmacro.py # グローバルマクロ分析
-    │   └── post.py             # ブログ投稿処理
-```
+README が対象とする実装は `test/src/` です。
 
-## 主要機能
+- `search_*.py`: Perplexity API を利用した検索処理
+- `post.py` / `post_*.py`: はてなブログ AtomPub への送信処理
+- `config.py`: API endpoint、検索domain、model等の設定
+- `test/output/`: 過去に生成された出力
 
-**検索モジュール**
-- 多言語ドメインからの情報収集（中国語サイト対応）
-- LLMによる情報の整理・分析
-- 複数の金融分野をカバー（株式、マクロ経済、中国市場）
+`batch/` には別のローカル実行経路も残っています。Windows上の固定pathを含むため、現在のportableな実行interfaceとは扱いません。
 
-**投稿モジュール**
-- はてなブログAPIを使用した自動投稿
-- マークダウン形式での整形出力
-- 定期的な情報更新
+## 公開時の挙動
 
-## 特長
+現在の `test/src/post.py` は `HATENA_ID` と `HATENA_API_KEY` を環境変数から読み、AtomPub collection URIへPOSTします。生成XMLは `<app:draft>no</app:draft>` を指定しているため、公開前reviewを強制する実装にはなっていません。
 
-**強み**
-- 中国語ドメインを含む多言語ソースからの情報収集
-- LLMによる自動的な情報整理
-- 定期的な更新による最新情報の提供
+はてなブログ公式AtomPub仕様: https://developer.hatena.ne.jp/ja/documents/blog/apis/atom/
 
-**課題**
-- 情報の精度と信頼性の向上が必要
-- LLMモデル（sonar-reasoning-pro）の制御精度
+## 現在確認できていないこと
 
-## 将来性
+- 検索結果の各主張が一次情報へ照合済みであること
+- 生成文章と根拠URLを対応付ける保存形式
+- draft → review → publish の承認手順
+- fresh cloneからのportableな依存関係installと実行
+- repositoryのcommitと公開記事を対応付けるdeployment evidence
+- 定期実行scheduler
 
-- モデルの改善による精度向上
-- プロンプトエンジニアリングの最適化
-- ドメイン特化型の情報収集強化
+したがって、このrepositoryだけを根拠に「最新」「正確」「自動定期更新」を保証しません。
 
-## 技術スタック
+## 検証
 
-- Python
-- はてなブログAPI
-- LLMモデル（sonar-reasoning-pro）
-- マークダウン処理
+GitHub ActionsではPython標準ライブラリだけを使い、tracked Python sourceの構文と、`post.py` のmain entrypointが1つだけであることを検証します。
