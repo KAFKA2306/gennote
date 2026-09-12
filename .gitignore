@@ -1,5 +1,6 @@
 .env
 test/output/*.md
+test/output/.publication-state/
 test/input/
 *.pyc
 __pycache__/
