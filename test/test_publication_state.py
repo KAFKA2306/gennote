@@ -7,7 +7,7 @@ import unittest
 SOURCE_DIR = Path(__file__).parent / "src"
 sys.path.insert(0, str(SOURCE_DIR))
 
-from publication_state import publication_identity, publish_once
+from publication_state import confirm_from_readback, publication_identity, publish_once
 
 
 class FakeResponse:
@@ -118,6 +118,32 @@ class PublicationStateTest(unittest.TestCase):
             publication_identity("金融AIレポート", "同じ本文"),
             publication_identity("金融AIレポート", "同じ本文"),
         )
+
+    def test_readback_can_resolve_uncertain_without_another_create(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            publication_id = publication_identity("title", "body")
+
+            uncertain = publish_once(
+                publication_id=publication_id,
+                state_dir=state_dir,
+                create=lambda: (_ for _ in ()).throw(TimeoutError("response lost")),
+            )
+            self.assertEqual(uncertain.status, "uncertain")
+
+            confirmed = confirm_from_readback(
+                publication_id=publication_id,
+                state_dir=state_dir,
+                remote_url="https://example.test/entry/recovered",
+            )
+            rerun = publish_once(
+                publication_id=publication_id,
+                state_dir=state_dir,
+                create=lambda: self.fail("confirmed read-back must block create"),
+            )
+
+            self.assertTrue(confirmed.confirmed)
+            self.assertEqual(rerun, confirmed)
 
 
 if __name__ == "__main__":
