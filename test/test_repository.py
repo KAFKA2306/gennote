@@ -33,7 +33,7 @@ def load_post_module():
     sys.modules["bs4"] = bs4
 
     dotenv = types.ModuleType("dotenv")
-    dotenv.load_dotenv = lambda: None
+    dotenv.load_dotenv = lambda *args, **kwargs: None
     sys.modules["dotenv"] = dotenv
 
     spec = importlib.util.spec_from_file_location("gennote_post", SOURCE_DIR / "post.py")
