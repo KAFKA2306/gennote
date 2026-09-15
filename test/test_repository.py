@@ -1,16 +1,41 @@
 import ast
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
+import types
 import unittest
-
-import requests
 
 
 SOURCE_DIR = Path(__file__).parent / "src"
 
 
 def load_post_module():
+    requests = types.ModuleType("requests")
+
+    class RequestException(Exception):
+        pass
+
+    class Timeout(RequestException):
+        pass
+
+    requests.RequestException = RequestException
+    requests.Timeout = Timeout
+    requests.post = lambda *args, **kwargs: None
+    sys.modules["requests"] = requests
+
+    markdown = types.ModuleType("markdown")
+    markdown.Markdown = object
+    sys.modules["markdown"] = markdown
+
+    bs4 = types.ModuleType("bs4")
+    bs4.BeautifulSoup = object
+    sys.modules["bs4"] = bs4
+
+    dotenv = types.ModuleType("dotenv")
+    dotenv.load_dotenv = lambda: None
+    sys.modules["dotenv"] = dotenv
+
     spec = importlib.util.spec_from_file_location("gennote_post", SOURCE_DIR / "post.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -62,7 +87,7 @@ class RepositoryTest(unittest.TestCase):
 
             def timeout(*args, **kwargs):
                 calls.append(1)
-                raise requests.Timeout("response lost")
+                raise post.requests.Timeout("response lost")
 
             first = post.publish_entry("title", "body", "endpoint", {}, state, timeout)
             second = post.publish_entry("title", "body", "endpoint", {}, state, timeout)
