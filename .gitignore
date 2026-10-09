@@ -4,6 +4,7 @@ test/input/
 *.pyc
 __pycache__/
 test/*.md
+test/publication-state.json
 batch/batch_logs/
 batch/scripts/
 *.log
