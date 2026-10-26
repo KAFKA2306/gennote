@@ -63,6 +63,15 @@ def publish_entry(title, content, endpoint, headers, state_path, http_post=reque
     if previous and previous.get('status') == 'uncertain':
         return previous
 
+    # Record the in-flight attempt before the external side effect. A crash after
+    # remote creation but before receiving the response must not cause a blind retry.
+    state[identity] = {
+        'publicationId': identity,
+        'status': 'uncertain',
+        'reason': 'create_in_flight',
+    }
+    _write_state(state_path, state)
+
     entry_xml = f'''<?xml version="1.0" encoding="utf-8"?>
     <entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
       <title>{html.escape(title)}</title>
