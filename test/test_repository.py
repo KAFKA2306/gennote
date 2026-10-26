@@ -1,4 +1,5 @@
 import ast
+import json
 import importlib.util
 from pathlib import Path
 import sys
@@ -105,6 +106,35 @@ class RepositoryTest(unittest.TestCase):
             self.assertEqual(result["status"], "uncertain")
             self.assertNotIn("remoteUrl", result)
 
+
+    def test_inflight_intent_survives_process_crash(self):
+        post = load_post_module()
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / "state.json"
+            identity = post.publication_id("title", "body")
+            calls = []
+
+            def remote_create_then_crash(*args, **kwargs):
+                calls.append(1)
+                persisted = json.loads(state.read_text(encoding="utf-8"))
+                self.assertEqual(persisted[identity]["status"], "uncertain")
+                self.assertEqual(persisted[identity]["reason"], "create_in_flight")
+                raise KeyboardInterrupt("process died after remote creation")
+
+            with self.assertRaises(KeyboardInterrupt):
+                post.publish_entry(
+                    "title", "body", "endpoint", {}, state, remote_create_then_crash
+                )
+
+            def forbidden_retry(*args, **kwargs):
+                self.fail("an uncertain external create must not be repeated")
+
+            result = post.publish_entry(
+                "title", "body", "endpoint", {}, state, forbidden_retry
+            )
+            self.assertEqual(result["status"], "uncertain")
+            self.assertEqual(result["reason"], "create_in_flight")
+            self.assertEqual(len(calls), 1)
 
 if __name__ == "__main__":
     unittest.main()
