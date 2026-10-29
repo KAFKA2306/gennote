@@ -6,6 +6,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import markdown
 import requests
@@ -88,12 +89,23 @@ def publish_entry(title, content, endpoint, headers, state_path, http_post=reque
         return result
 
     location = response.headers.get('Location')
-    if response.status_code == 201 and location:
+    parsed = urlparse(location) if isinstance(location, str) else None
+    verified_location = (
+        parsed is not None and parsed.scheme in {'http', 'https'} and bool(parsed.netloc)
+    )
+    if response.status_code == 201 and verified_location:
         result = {'publicationId': identity, 'status': 'confirmed', 'remoteUrl': location}
     elif response.status_code == 201:
-        result = {'publicationId': identity, 'status': 'uncertain', 'reason': 'missing_remote_identity'}
+        result = {'publicationId': identity, 'status': 'uncertain', 'reason': 'missing_or_invalid_remote_identity'}
     else:
-        result = {'publicationId': identity, 'status': 'failed', 'httpStatus': response.status_code}
+        # A non-201 response does not prove that the remote side effect did not occur.
+        # Require explicit reconciliation rather than issuing a duplicate POST.
+        result = {
+            'publicationId': identity,
+            'status': 'uncertain',
+            'reason': 'unverified_http_response',
+            'httpStatus': response.status_code,
+        }
     state[identity] = result
     _write_state(state_path, state)
     return result
