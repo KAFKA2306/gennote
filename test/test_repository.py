@@ -107,6 +107,40 @@ class RepositoryTest(unittest.TestCase):
             self.assertNotIn("remoteUrl", result)
 
 
+    def test_unverified_http_response_never_reposts(self):
+        post = load_post_module()
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / "state.json"
+            calls = []
+
+            def ambiguous_response(*args, **kwargs):
+                calls.append(1)
+                return FakeResponse(status_code=500)
+
+            first = post.publish_entry("title", "body", "endpoint", {}, state, ambiguous_response)
+            second = post.publish_entry("title", "body", "endpoint", {}, state, ambiguous_response)
+            self.assertEqual(first["status"], "uncertain")
+            self.assertEqual(first["httpStatus"], 500)
+            self.assertEqual(second, first)
+            self.assertEqual(len(calls), 1)
+
+    def test_invalid_location_cannot_confirm_publication(self):
+        post = load_post_module()
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / "state.json"
+            calls = []
+
+            def invalid_location(*args, **kwargs):
+                calls.append(1)
+                return FakeResponse(status_code=201, location="not-a-valid-url")
+
+            first = post.publish_entry("title", "body", "endpoint", {}, state, invalid_location)
+            second = post.publish_entry("title", "body", "endpoint", {}, state, invalid_location)
+            self.assertEqual(first["status"], "uncertain")
+            self.assertNotIn("remoteUrl", first)
+            self.assertEqual(second, first)
+            self.assertEqual(len(calls), 1)
+
     def test_inflight_intent_survives_process_crash(self):
         post = load_post_module()
         with tempfile.TemporaryDirectory() as directory:
